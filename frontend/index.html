@@ -290,7 +290,9 @@
     if (!url) { status.innerHTML = '<p style="color:#ea4335; font-size:13px;">⚠️ Please enter a URL first</p>'; return; }
     status.innerHTML = '<p style="color:#1a73e8; font-size:13px;">🔄 Testing connection...</p>';
     try {
-      const res = await fetch(url + '/health');
+      const res = await fetch(url + '/health', {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       const data = await res.json();
       status.innerHTML = '<p style="color:#34a853; font-size:13px;">✅ Connected! Backend is running.</p>';
     } catch (e) {
