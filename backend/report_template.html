@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meridian MMM Report — {{ date_start }} to {{ date_end }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Google Sans', Arial, sans-serif; background: #f8f9fa; color: #202124; }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 40px 48px; }
+    .header h1 { font-size: 32px; font-weight: 600; }
+    .header p { margin-top: 10px; opacity: 0.85; font-size: 16px; }
+    .header .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 13px; margin-top: 12px; }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 0 auto; padding: 36px 24px; }
+
+    /* Section cards */
+    .section { background: white; border-radius: 16px; padding: 32px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .section h2 { font-size: 20px; color: #1a73e8; padding-bottom: 14px; border-bottom: 2px solid #e8f0fe; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .section p.desc { color: #5f6368; font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+    .section img { width: 100%; border-radius: 10px; border: 1px solid #e8eaed; margin-top: 8px; }
+
+    /* Overview cards */
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .meta-card { background: #f8f9fa; border-radius: 12px; padding: 20px 24px; border-left: 4px solid #1a73e8; }
+    .meta-card .label { font-size: 11px; color: #5f6368; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    .meta-card .value { font-size: 24px; font-weight: 700; color: #202124; margin-top: 6px; }
+
+    /* Channel tags */
+    .channels { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .tag { background: #e8f0fe; color: #1a73e8; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+
+    /* Table */
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    .data-table th { background: #1a73e8; color: white; padding: 12px 16px; text-align: left; font-weight: 500; }
+    .data-table th:first-child { border-radius: 8px 0 0 0; }
+    .data-table th:last-child { border-radius: 0 8px 0 0; }
+    .data-table td { padding: 11px 16px; border-bottom: 1px solid #f1f3f4; }
+    .data-table tr:hover td { background: #f8f9fa; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* No data */
+    .no-data { background: #fef7e0; border: 1px solid #fdd663; border-radius: 8px; padding: 16px 20px; color: #856404; font-size: 14px; margin-top: 12px; }
+
+    /* Footer */
+    .footer { text-align: center; padding: 32px 24px; color: #9aa0a6; font-size: 13px; border-top: 1px solid #e8eaed; margin-top: 16px; }
+    .footer strong { color: #5f6368; }
+
+    /* Nav */
+    .toc { background: white; border-radius: 16px; padding: 24px 32px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .toc h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.8px; color: #5f6368; margin-bottom: 12px; }
+    .toc-links { display: flex; flex-wrap: wrap; gap: 10px; }
+    .toc-links a { color: #1a73e8; text-decoration: none; font-size: 14px; padding: 6px 14px; border: 1px solid #dadce0; border-radius: 20px; transition: all 0.2s; }
+    .toc-links a:hover { background: #e8f0fe; border-color: #1a73e8; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>📊 Marketing Mix Model Report</h1>
+  <p>Powered by Google Meridian · Bayesian MMM Analysis</p>
+  <div class="badge">{{ date_start }} → {{ date_end }}</div>
+</div>
+
+<div class="container">
+
+  <!-- Table of Contents -->
+  <div class="toc">
+    <h3>Jump to Section</h3>
+    <div class="toc-links">
+      <a href="#overview">Overview</a>
+      <a href="#model-fit">Model Fit</a>
+      <a href="#roi">ROI by Channel</a>
+      <a href="#decomposition">KPI Decomposition</a>
+      <a href="#response">Response Curves</a>
+      <a href="#budget">Budget Optimization</a>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <div class="section" id="overview">
+    <h2>📋 Overview</h2>
+    <div class="meta-grid">
+      <div class="meta-card">
+        <div class="label">Date Range</div>
+        <div class="value" style="font-size:16px; margin-top:8px;">{{ date_start }} – {{ date_end }}</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Channels Analyzed</div>
+        <div class="value">{{ channels|length }}</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Model Type</div>
+        <div class="value" style="font-size:16px; margin-top:8px;">Bayesian MMM</div>
+      </div>
+    </div>
+    <div class="channels">
+      {% for ch in channels %}
+        <span class="tag">{{ ch }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Model Fit -->
+  <div class="section" id="model-fit">
+    <h2>📈 1. Model Fit — Predicted vs Actual KPI</h2>
+    <p class="desc">
+      Shows how well the Meridian model explains your historical KPI data.
+      A good fit means the model has successfully learned the patterns in your marketing data.
+      Blue line = actual KPI, orange line = model prediction.
+    </p>
+    {% if plots.model_fit %}
+      <img src="data:image/png;base64,{{ plots.model_fit }}" alt="Model Fit Chart">
+    {% else %}
+      <div class="no-data">⚠️ Model fit chart could not be generated.</div>
+    {% endif %}
+  </div>
+
+  <!-- ROI -->
+  <div class="section" id="roi">
+    <h2>💰 2. ROI by Channel</h2>
+    <p class="desc">
+      Return on investment for each marketing channel — how much revenue (or KPI) was generated
+      per $1 spent. Higher bars mean more efficient channels. Credible intervals show model uncertainty.
+    </p>
+    {% if plots.roi %}
+      <img src="data:image/png;base64,{{ plots.roi }}" alt="ROI by Channel">
+    {% else %}
+      <div class="no-data">⚠️ ROI chart could not be generated.</div>
+    {% endif %}
+    {{ tables.roi | safe }}
+  </div>
+
+  <!-- Decomposition -->
+  <div class="section" id="decomposition">
+    <h2>🔍 3. KPI Decomposition</h2>
+    <p class="desc">
+      Breaks down your total KPI into contributions from each marketing channel
+      and the organic baseline. Shows what percentage of results came from paid media
+      vs what would have happened without any marketing.
+    </p>
+    {% if plots.decomposition %}
+      <img src="data:image/png;base64,{{ plots.decomposition }}" alt="KPI Decomposition">
+    {% else %}
+      <div class="no-data">⚠️ Decomposition chart could not be generated.</div>
+    {% endif %}
+  </div>
+
+  <!-- Response Curves -->
+  <div class="section" id="response">
+    <h2>📉 4. Response Curves</h2>
+    <p class="desc">
+      Diminishing returns curves for each channel. Shows how incremental KPI changes
+      as you increase spend. The flatter the curve gets, the less efficient additional
+      spending becomes. Use this to identify over- and under-invested channels.
+    </p>
+    {% if plots.response_curves %}
+      <img src="data:image/png;base64,{{ plots.response_curves }}" alt="Response Curves">
+    {% else %}
+      <div class="no-data">⚠️ Response curves could not be generated.</div>
+    {% endif %}
+  </div>
+
+  <!-- Budget Optimization -->
+  <div class="section" id="budget">
+    <h2>🎯 5. Budget Optimization</h2>
+    <p class="desc">
+      Recommended reallocation of your current total budget across channels to maximize KPI.
+      Green = recommended optimal spend, blue = current spend. Shift budget toward channels
+      with higher marginal ROI.
+    </p>
+    {% if plots.budget %}
+      <img src="data:image/png;base64,{{ plots.budget }}" alt="Budget Optimization">
+    {% else %}
+      <div class="no-data">⚠️ Budget optimization chart could not be generated.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <strong>Meridian MMM Tool</strong> · Powered by Google Meridian (Bayesian MMM) ·
+  Report ID: {{ job_id }} · Period: {{ date_start }} to {{ date_end }}
+</div>
+
+</body>
+</html>
