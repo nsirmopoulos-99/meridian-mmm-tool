@@ -357,7 +357,9 @@
     pollInterval = setInterval(async () => {
       elapsed += 15;
       try {
-        const res = await fetch(backendUrl + '/status/' + currentJobId);
+        const res = await fetch(backendUrl + '/status/' + currentJobId, {
+          headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
         const data = await res.json();
 
         if (data.status === 'running') {
@@ -384,9 +386,8 @@
       } catch(e) {
         addLog('Polling error: ' + e.message, 'error');
       }
-    }, 15000); // poll every 15 seconds
+    }, 15000);
   }
-
   // --- Load Report ---
   function loadReport(backendUrl) {
     showScreen('report');
