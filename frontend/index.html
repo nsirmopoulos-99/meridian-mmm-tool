@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meridian MMM Tool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Google Sans', Arial, sans-serif; background: #f8f9fa; color: #202124; }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header p { opacity: 0.8; font-size: 14px; margin-top: 4px; }
+    .header .logo { font-size: 36px; }
+
+    /* Main layout */
+    .container { max-width: 860px; margin: 48px auto; padding: 0 24px; }
+
+    /* Cards */
+    .card { background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 18px; color: #1a73e8; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 2px solid #e8f0fe; }
+
+    /* Steps indicator */
+    .steps { display: flex; gap: 0; margin-bottom: 32px; }
+    .step { flex: 1; text-align: center; padding: 14px; background: white; border: 1px solid #dadce0; font-size: 13px; color: #9aa0a6; font-weight: 500; }
+    .step:first-child { border-radius: 8px 0 0 8px; }
+    .step:last-child { border-radius: 0 8px 8px 0; }
+    .step.active { background: #1a73e8; color: white; border-color: #1a73e8; }
+    .step.done { background: #e8f0fe; color: #1a73e8; border-color: #1a73e8; }
+    .step .num { display: block; font-size: 20px; margin-bottom: 4px; }
+
+    /* Upload area */
+    .upload-area { border: 2px dashed #dadce0; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
+    .upload-area:hover { border-color: #1a73e8; background: #f0f4ff; }
+    .upload-area.has-file { border-color: #34a853; background: #f0faf4; }
+    .upload-area .icon { font-size: 48px; margin-bottom: 12px; }
+    .upload-area h3 { font-size: 16px; color: #202124; margin-bottom: 8px; }
+    .upload-area p { font-size: 13px; color: #5f6368; }
+    .upload-area input { display: none; }
+    .file-name { margin-top: 12px; font-size: 14px; color: #34a853; font-weight: 500; }
+
+    /* Form fields */
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #3c4043; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 14px; border: 1px solid #dadce0; border-radius: 8px;
+      font-size: 14px; color: #202124; outline: none; transition: border 0.2s;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
+    .form-group textarea { min-height: 120px; resize: vertical; font-family: 'Courier New', monospace; font-size: 13px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .hint { font-size: 12px; color: #9aa0a6; margin-top: 6px; line-height: 1.5; }
+
+    /* Backend URL input */
+    .url-bar { display: flex; gap: 10px; margin-bottom: 24px; }
+    .url-bar input { flex: 1; padding: 12px 14px; border: 1px solid #dadce0; border-radius: 8px; font-size: 14px; }
+    .url-bar button { padding: 12px 20px; background: #f1f3f4; border: 1px solid #dadce0; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .url-bar button:hover { background: #e8eaed; }
+
+    /* Buttons */
+    .btn { padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; width: 100%; }
+    .btn-primary { background: #1a73e8; color: white; }
+    .btn-primary:hover { background: #1557b0; box-shadow: 0 4px 12px rgba(26,115,232,0.3); }
+    .btn-primary:disabled { background: #9aa0a6; cursor: not-allowed; box-shadow: none; }
+
+    /* Progress */
+    .progress-wrap { margin: 20px 0; }
+    .progress-bar-bg { background: #e8eaed; border-radius: 100px; height: 8px; overflow: hidden; }
+    .progress-bar { background: linear-gradient(90deg, #1a73e8, #34a853); height: 100%; border-radius: 100px; transition: width 0.5s; }
+    .progress-log { background: #f8f9fa; border: 1px solid #e8eaed; border-radius: 8px; padding: 16px; margin-top: 16px; font-family: monospace; font-size: 13px; color: #3c4043; max-height: 160px; overflow-y: auto; line-height: 1.8; }
+    .log-line { display: flex; gap: 10px; }
+    .log-line .time { color: #9aa0a6; }
+    .log-line.success { color: #34a853; }
+    .log-line.error { color: #ea4335; }
+
+    /* Status badge */
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+    .status-pending { background: #fef7e0; color: #856404; }
+    .status-running { background: #e8f0fe; color: #1a73e8; }
+    .status-complete { background: #e6f4ea; color: #137333; }
+    .status-error { background: #fce8e6; color: #c5221f; }
+
+    /* Report frame */
+    .report-frame { width: 100%; height: 85vh; border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+    /* Hidden */
+    .hidden { display: none; }
+
+    /* Pulse animation */
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .pulsing { animation: pulse 1.5s infinite; }
+
+    /* Sample data notice */
+    .notice { background: #e8f0fe; border-left: 4px solid #1a73e8; border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; color: #1a73e8; margin-bottom: 20px; line-height: 1.6; }
+
+    .footer { text-align: center; padding: 24px; color: #9aa0a6; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <h1>📊 Meridian MMM Tool</h1>
+    <p>Marketing Mix Modeling powered by Google Meridian</p>
+  </div>
+  <div class="logo">🔬</div>
+</div>
+
+<div class="container">
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="step1"><span class="num">1</span>Upload & Configure</div>
+    <div class="step" id="step2"><span class="num">2</span>Running Analysis</div>
+    <div class="step" id="step3"><span class="num">3</span>View Report</div>
+  </div>
+
+  <!-- SCREEN 1: Upload & Configure -->
+  <div id="screen-upload">
+
+    <!-- Backend URL -->
+    <div class="card">
+      <h2>🔗 Backend Connection</h2>
+      <p style="font-size:14px; color:#5f6368; margin-bottom:16px;">Paste your Google Colab backend URL here. You will get this URL when you run the Colab notebook.</p>
+      <div class="url-bar">
+        <input type="text" id="backendUrl" placeholder="https://xxxx-xx-xx-xxx-xx.ngrok-free.app" />
+        <button onclick="testConnection()">Test Connection</button>
+      </div>
+      <div id="connectionStatus"></div>
+    </div>
+
+    <!-- Upload CSV -->
+    <div class="card">
+      <h2>📁 Upload Your Data</h2>
+
+      <div class="notice">
+        📌 Your CSV must have these columns: <strong>date</strong>, your KPI column (e.g. <strong>revenue</strong>),
+        media impression columns (e.g. <strong>google_impressions</strong>), and spend columns (e.g. <strong>google_spend</strong>).
+        <br><br>
+        Date format: <strong>YYYY-MM-DD</strong> &nbsp;·&nbsp; Frequency: <strong>weekly or daily</strong> &nbsp;·&nbsp; Minimum: <strong>2 years of data</strong>
+      </div>
+
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()">
+        <div class="icon">📂</div>
+        <h3>Click to upload your CSV file</h3>
+        <p>or drag and drop here</p>
+        <input type="file" id="csvFile" accept=".csv" onchange="handleFileSelect(event)">
+        <div class="file-name hidden" id="fileName"></div>
+      </div>
+    </div>
+
+    <!-- Date Range -->
+    <div class="card">
+      <h2>📅 Date Range</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="dateStart">
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="dateEnd">
+        </div>
+      </div>
+    </div>
+
+    <!-- Column Mapping -->
+    <div class="card">
+      <h2>⚙️ Column Configuration</h2>
+      <p style="font-size:14px; color:#5f6368; margin-bottom:20px;">
+        Tell the model which columns in your CSV correspond to which data types.
+      </p>
+
+      <div class="form-group">
+        <label>KPI Column Name</label>
+        <input type="text" id="kpiCol" placeholder="e.g. revenue" value="revenue">
+        <div class="hint">The main metric you want to model (revenue, conversions, sales, etc.)</div>
+      </div>
+
+      <div class="form-group">
+        <label>Revenue Per KPI Column (optional)</label>
+        <input type="text" id="revPerKpiCol" placeholder="e.g. revenue_per_conversion">
+        <div class="hint">Leave blank if your KPI is already revenue</div>
+      </div>
+
+      <div class="form-group">
+        <label>Media Channels — Impressions columns → Channel names</label>
+        <textarea id="mediaChannels" placeholder='{"google_impressions": "Google", "facebook_impressions": "Facebook", "tv_impressions": "TV"}'></textarea>
+        <div class="hint">JSON format: { "csv_column_name": "Display Name", ... }</div>
+      </div>
+
+      <div class="form-group">
+        <label>Media Spend columns → Channel names</label>
+        <textarea id="mediaSpend" placeholder='{"google_spend": "Google", "facebook_spend": "Facebook", "tv_spend": "TV"}'></textarea>
+        <div class="hint">JSON format: { "csv_column_name": "Display Name", ... } — must match the same channel names above</div>
+      </div>
+
+      <div class="form-group">
+        <label>Control Variables (optional)</label>
+        <input type="text" id="controls" placeholder='["seasonality", "gqv", "competitor_index"]'>
+        <div class="hint">JSON array of column names for non-media factors that affect your KPI</div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn btn-primary" id="runBtn" onclick="runAnalysis()">
+      🚀 Run Meridian Analysis
+    </button>
+    <br><br>
+
+  </div>
+
+  <!-- SCREEN 2: Progress -->
+  <div id="screen-progress" class="hidden">
+    <div class="card">
+      <h2>⚙️ Running Meridian Analysis</h2>
+
+      <div style="text-align:center; padding: 16px 0 24px;">
+        <div id="statusBadge" class="status-badge status-running pulsing">⏳ Initializing...</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar" id="progressBar" style="width: 5%"></div>
+        </div>
+      </div>
+
+      <div class="progress-log" id="progressLog">
+        <div class="log-line"><span class="time">--:--</span><span>Starting analysis job...</span></div>
+      </div>
+
+      <p style="font-size:13px; color:#9aa0a6; margin-top:16px; text-align:center;">
+        ⏱ Bayesian model training typically takes <strong>15–30 minutes</strong> with GPU. Please keep this page open.
+      </p>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Report -->
+  <div id="screen-report" class="hidden">
+    <div class="card" style="padding: 20px 32px;">
+      <h2 style="margin-bottom:0;">✅ Analysis Complete</h2>
+    </div>
+    <iframe id="reportFrame" class="report-frame" src="about:blank"></iframe>
+  </div>
+
+</div>
+
+<div class="footer">Meridian MMM Tool · Powered by Google Meridian · Privacy-safe aggregated modeling</div>
+
+<script>
+  let currentJobId = null;
+  let pollInterval = null;
+  let selectedFile = null;
+
+  // --- File Upload ---
+  function handleFileSelect(event) {
+    selectedFile = event.target.files[0];
+    if (selectedFile) {
+      document.getElementById('uploadArea').classList.add('has-file');
+      const fn = document.getElementById('fileName');
+      fn.textContent = '✅ ' + selectedFile.name;
+      fn.classList.remove('hidden');
+    }
+  }
+
+  // Drag and drop
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#1a73e8'; });
+  uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#dadce0'; });
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#dadce0';
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      selectedFile = file;
+      uploadArea.classList.add('has-file');
+      const fn = document.getElementById('fileName');
+      fn.textContent = '✅ ' + file.name;
+      fn.classList.remove('hidden');
+    }
+  });
+
+  // --- Test Backend Connection ---
+  async function testConnection() {
+    const url = document.getElementById('backendUrl').value.trim();
+    const status = document.getElementById('connectionStatus');
+    if (!url) { status.innerHTML = '<p style="color:#ea4335; font-size:13px;">⚠️ Please enter a URL first</p>'; return; }
+    status.innerHTML = '<p style="color:#1a73e8; font-size:13px;">🔄 Testing connection...</p>';
+    try {
+      const res = await fetch(url + '/health');
+      const data = await res.json();
+      status.innerHTML = '<p style="color:#34a853; font-size:13px;">✅ Connected! Backend is running.</p>';
+    } catch (e) {
+      status.innerHTML = '<p style="color:#ea4335; font-size:13px;">❌ Could not connect. Make sure your Colab backend is running and the URL is correct.</p>';
+    }
+  }
+
+  // --- Build config object ---
+  function buildConfig() {
+    const parseJSON = (id, fallback) => {
+      try { return JSON.parse(document.getElementById(id).value.trim()); }
+      catch(e) { return fallback; }
+    };
+    return {
+      kpi: document.getElementById('kpiCol').value.trim() || 'revenue',
+      revenue_per_kpi: document.getElementById('revPerKpiCol').value.trim() || null,
+      media_channels: parseJSON('mediaChannels', {}),
+      media_spend: parseJSON('mediaSpend', {}),
+      controls: parseJSON('controls', []),
+    };
+  }
+
+  // --- Run Analysis ---
+  async function runAnalysis() {
+    const backendUrl = document.getElementById('backendUrl').value.trim();
+    if (!backendUrl) { alert('Please enter your backend URL first.'); return; }
+    if (!selectedFile) { alert('Please upload a CSV file first.'); return; }
+    if (!document.getElementById('dateStart').value) { alert('Please select a start date.'); return; }
+    if (!document.getElementById('dateEnd').value) { alert('Please select an end date.'); return; }
+
+    const config = buildConfig();
+    if (!Object.keys(config.media_channels).length) { alert('Please fill in the Media Channels configuration.'); return; }
+    if (!Object.keys(config.media_spend).length) { alert('Please fill in the Media Spend configuration.'); return; }
+
+    // Switch to progress screen
+    showScreen('progress');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('config', JSON.stringify(config));
+    formData.append('date_start', document.getElementById('dateStart').value);
+    formData.append('date_end', document.getElementById('dateEnd').value);
+
+    try {
+      addLog('Uploading data to backend...', 'normal');
+      const res = await fetch(backendUrl + '/analyze', { method: 'POST', body: formData });
+      const data = await res.json();
+      currentJobId = data.job_id;
+      addLog('Job created: ' + currentJobId, 'normal');
+      addLog('Meridian model training started...', 'normal');
+      setProgress(10);
+      startPolling(backendUrl);
+    } catch (e) {
+      addLog('Error: ' + e.message, 'error');
+      setStatus('error', '❌ Failed to start analysis');
+    }
+  }
+
+  // --- Poll for job status ---
+  function startPolling(backendUrl) {
+    let elapsed = 0;
+    pollInterval = setInterval(async () => {
+      elapsed += 15;
+      try {
+        const res = await fetch(backendUrl + '/status/' + currentJobId);
+        const data = await res.json();
+
+        if (data.status === 'running') {
+          const pct = Math.min(10 + (elapsed / 1800) * 80, 88);
+          setProgress(pct);
+          if (elapsed % 60 === 0) addLog('Model still training... (' + Math.round(elapsed/60) + ' min elapsed)', 'normal');
+          setStatus('running', '⏳ Running Meridian model...');
+        }
+
+        if (data.status === 'complete') {
+          clearInterval(pollInterval);
+          setProgress(100);
+          setStatus('complete', '✅ Analysis complete!');
+          addLog('Analysis complete! Loading report...', 'success');
+          setTimeout(() => loadReport(backendUrl), 1500);
+        }
+
+        if (data.status === 'error') {
+          clearInterval(pollInterval);
+          setStatus('error', '❌ Analysis failed');
+          addLog('Error: ' + (data.error || 'Unknown error'), 'error');
+        }
+
+      } catch(e) {
+        addLog('Polling error: ' + e.message, 'error');
+      }
+    }, 15000); // poll every 15 seconds
+  }
+
+  // --- Load Report ---
+  function loadReport(backendUrl) {
+    showScreen('report');
+    document.getElementById('reportFrame').src = backendUrl + '/report/' + currentJobId;
+  }
+
+  // --- UI Helpers ---
+  function showScreen(name) {
+    document.getElementById('screen-upload').classList.add('hidden');
+    document.getElementById('screen-progress').classList.add('hidden');
+    document.getElementById('screen-report').classList.add('hidden');
+    document.getElementById('screen-' + name).classList.remove('hidden');
+    if (name === 'upload') { setStep(1); }
+    else if (name === 'progress') { setStep(2); }
+    else if (name === 'report') { setStep(3); }
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('step' + i);
+      el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+    }
+  }
+
+  function setProgress(pct) {
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  function setStatus(type, text) {
+    const badge = document.getElementById('statusBadge');
+    badge.className = 'status-badge status-' + type + (type === 'running' ? ' pulsing' : '');
+    badge.textContent = text;
+  }
+
+  function addLog(msg, type) {
+    const log = document.getElementById('progressLog');
+    const now = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'log-line ' + (type || '');
+    line.innerHTML = `<span class="time">${now}</span><span>${msg}</span>`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
