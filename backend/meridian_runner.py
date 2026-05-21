@@ -2,9 +2,9 @@ import pandas as pd
 import json
 import os
 from meridian.data import load
-from meridian.model import meridian as mmm_model
+from meridian.model import model as mmm_model
 from meridian.analysis import analyzer as mmm_analyzer
-from meridian.optimization import optimizer as mmm_optimizer
+from meridian.optimization import budget_optimizer as mmm_optimizer
 
 
 def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, date_end: str):
