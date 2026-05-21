@@ -4,7 +4,7 @@ import os
 from meridian.data import load
 from meridian.model import model as mmm_model
 from meridian.analysis import analyzer as mmm_analyzer
-from meridian.optimization import budget_optimizer as mmm_optimizer
+from meridian.analysis import optimizer as mmm_optimizer
 
 
 def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, date_end: str):
@@ -68,9 +68,11 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
 
     # --- 6. Optimize budget ---
     budget_opt = mmm_optimizer.BudgetOptimizer(model)
-    optimization_result = budget_opt.optimize(
-        budget=df[list(column_config['media_spend'].keys())].sum().sum()
+optimization_result = budget_opt.optimize(
+    scenario=mmm_optimizer.FixedBudgetScenario(
+        total_budget=float(df[list(column_config['media_spend'].keys())].sum().sum())
     )
+)
 
     return {
         'model': model,
