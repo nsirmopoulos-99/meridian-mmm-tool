@@ -40,12 +40,12 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
     # 4. Build and fit model
     model = mmm_model.Meridian(input_data=input_data)
     model.sample_prior(500)
-    model.fit_model(
-        n_chains=4,
-        n_adapt=500,
-        n_burnin=500,
-        n_keep=1000
-    )
+model.sample_posterior(
+    n_chains=4,
+    n_adapt=500,
+    n_burnin=500,
+    n_keep=1000
+)
 
     # 5. Analyze results
     analysis = mmm_analyzer.Analyzer(model)
