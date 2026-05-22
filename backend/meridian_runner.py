@@ -1,20 +1,17 @@
 import pandas as pd
-import os
 from meridian.data import load
 from meridian.model import model as mmm_model
 from meridian.analysis import analyzer as mmm_analyzer
 from meridian.analysis import optimizer as mmm_optimizer
 
 
-def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, date_end: str):
+def run_meridian_analysis(csv_path, column_config, date_start, date_end):
 
-    # 1. Load and filter data
     df = pd.read_csv(csv_path, parse_dates=['date'])
     df = df[(df['date'] >= date_start) & (df['date'] <= date_end)]
     filtered_path = csv_path.replace('.csv', '_filtered.csv')
     df.to_csv(filtered_path, index=False)
 
-    # 2. Map columns
     coord_to_columns = load.CoordToColumns(
         time='date',
         kpi=column_config['kpi'],
@@ -24,7 +21,6 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
         media_spend=list(column_config['media_spend'].keys()),
     )
 
-    # 3. Load data
     loader = load.CsvDataLoader(
         csv_path=filtered_path,
         kpi_type='non_revenue',
@@ -34,7 +30,6 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
     )
     input_data = loader.load()
 
-    # 4. Build and fit model
     model = mmm_model.Meridian(input_data=input_data)
     model.sample_prior(500)
     model.sample_posterior(
@@ -44,16 +39,13 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
         n_keep=1000
     )
 
-    # 5. Analyze
     analysis = mmm_analyzer.Analyzer(model)
 
-    # 6. Optimize budget
     total_budget = float(df[list(column_config['media_spend'].keys())].sum().sum())
     budget_opt = mmm_optimizer.BudgetOptimizer(model)
-optimization_result = budget_opt.optimize(
-    fixed_budget=True,
-    budget=total_budget
-)
+    optimization_result = budget_opt.optimize(
+        fixed_budget=True,
+        budget=total_budget
     )
 
     return {
