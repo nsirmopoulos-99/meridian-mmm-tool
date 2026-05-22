@@ -50,10 +50,10 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
     # 6. Optimize budget
     total_budget = float(df[list(column_config['media_spend'].keys())].sum().sum())
     budget_opt = mmm_optimizer.BudgetOptimizer(model)
-    optimization_result = budget_opt.optimize(
-        scenario=mmm_optimizer.FixedBudgetScenario(
-            total_budget=total_budget
-        )
+optimization_result = budget_opt.optimize(
+    fixed_budget=True,
+    budget=total_budget
+)
     )
 
     return {
