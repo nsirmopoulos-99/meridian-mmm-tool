@@ -7,11 +7,8 @@ from meridian.analysis import optimizer as mmm_optimizer
 
 
 def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, date_end: str):
-    """
-    Runs the full Meridian MMM pipeline.
-    """
 
-    # 1. Load and filter data by date range
+    # 1. Load and filter data
     df = pd.read_csv(csv_path, parse_dates=['date'])
     df = df[(df['date'] >= date_start) & (df['date'] <= date_end)]
     filtered_path = csv_path.replace('.csv', '_filtered.csv')
@@ -27,7 +24,7 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
         media_spend=list(column_config['media_spend'].keys()),
     )
 
-    # 3. Load data into Meridian
+    # 3. Load data
     loader = load.CsvDataLoader(
         csv_path=filtered_path,
         kpi_type='non_revenue',
@@ -40,14 +37,14 @@ def run_meridian_analysis(csv_path: str, column_config: dict, date_start: str, d
     # 4. Build and fit model
     model = mmm_model.Meridian(input_data=input_data)
     model.sample_prior(500)
-model.sample_posterior(
-    n_chains=4,
-    n_adapt=500,
-    n_burnin=500,
-    n_keep=1000
-)
+    model.sample_posterior(
+        n_chains=4,
+        n_adapt=500,
+        n_burnin=500,
+        n_keep=1000
+    )
 
-    # 5. Analyze results
+    # 5. Analyze
     analysis = mmm_analyzer.Analyzer(model)
 
     # 6. Optimize budget
