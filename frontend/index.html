@@ -340,11 +340,12 @@
       addLog('Uploading data to backend...', 'normal');
       const res = await fetch(backendUrl + '/analyze', {
   method: 'POST',
-  body: formData,
-  headers: { 'ngrok-skip-browser-warning': 'true' }
+  body: formData
 });
-      const data = await res.json();
-      currentJobId = data.job_id;
+      const text = await res.text();
+const data = JSON.parse(text);
+console.log('Response:', data);
+currentJobId = data.job_id;
       addLog('Job created: ' + currentJobId, 'normal');
       addLog('Meridian model training started...', 'normal');
       setProgress(10);
